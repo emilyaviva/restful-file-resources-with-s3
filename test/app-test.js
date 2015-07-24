@@ -23,7 +23,8 @@ describe('user-model.js', function() {
         .send({name: 'test'})
         .end(function(err, res) {
           expect(err).to.eql(null);
-          expect(res.body.name).to.eql('test');
+          expect(res.body.success).to.be.true;
+          expect(res.body.msg).to.eql('Successfully created user test');
           done();
     });
   });
@@ -38,23 +39,35 @@ describe('user-model.js', function() {
     });
   });
 
-  it('should GET a user by name', function(done) {
+  it('should update a user\'s name on a PUT request', function(done) {
     chai.request('localhost:3003')
-        .get('/users/test')
+        .put('/users/test')
+        .send({name: 'test2'})
         .end(function(err, res) {
           expect(err).to.eql(null);
-          expect(typeof res.body).to.eql('object');
-          expect(res.body.name).to.eql('test');
+          expect(res.body.success).to.be.true;
+          expect(res.body.msg).to.eql('User test has been updated to test2');
           done();
     });
   });
-  
-  it('should DELETE a user by name', function(done) {
+
+  it('should GET a user by name', function(done) {
     chai.request('localhost:3003')
-        .delete('/users/test')
+        .get('/users/test2')
         .end(function(err, res) {
           expect(err).to.eql(null);
-          expect(res.body.msg).to.eql('user test deleted');
+          expect(typeof res.body).to.eql('object');
+          expect(res.body.name).to.eql('test2');
+          done();
+    });
+  });
+
+  it('should DELETE a user by name', function(done) {
+    chai.request('localhost:3003')
+        .delete('/users/test2')
+        .end(function(err, res) {
+          expect(err).to.eql(null);
+          expect(res.body.msg).to.eql('user test2 deleted');
           done();
    });
   });

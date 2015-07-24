@@ -7,11 +7,15 @@ var bodyParser = require('body-parser');
 var app = express();
 app.use(bodyParser.json());
 
-var mongoURI = process.env.MONGO_FILESAPP_URI //|| 'mongodb://localhost/filesApp';
+//var mongoURI = process.env.MONGO_FILESAPP_URI //|| 'mongodb://localhost/filesApp';
+var mongoURI = 'mongodb://localhost/filesApp';
 
 var userRoutes = express.Router();
+var fileRoutes = express.Router();
 require('./routes/user-routes')(userRoutes);
+require('./routes/file-routes')(fileRoutes);
 app.use('/', userRoutes);
+app.use('/', fileRoutes);
 
 mongoose.connect(mongoURI, function(err) {
   if (err) console.log('error: ' + err);
