@@ -16,6 +16,7 @@ chai.use(chaiHttp);
 require('../server');
 
 describe('user-model.js', function() {
+  this.timeout(5000);
 
   it('should create new resource for POST', function(done) {
     chai.request('localhost:3003')
@@ -62,14 +63,48 @@ describe('user-model.js', function() {
     });
   });
 
-  it('should DELETE a user by name', function(done) {
+  it('should DELETE a user with no files by name', function(done) {
     chai.request('localhost:3003')
         .delete('/users/test2')
         .end(function(err, res) {
           expect(err).to.eql(null);
-          expect(res.body.msg).to.eql('user test2 deleted');
+          expect(res.body.success).to.be.true;
+          expect(res.body.msg).to.eql('user test2 deleted (empty)');
           done();
-   });
+    });
+  });
+
+  it('should create a new user', function(done) {
+    chai.request('localhost:3003')
+        .post('/users')
+        .send({name: 'test3'})
+        .end(function(err, res) {
+          expect(err).to.eql(null);
+          done();
+      });
+    });
+
+    it('should upload a file to that new user', function(done) {
+      chai.request('localhost:3003')
+          .post('/users/test3/files')
+          .send({name: 'testfile.txt', body: '12345'})
+          .end(function(err, res) {
+            expect(err).to.eql(null);
+            expect(res.body.success).to.be.true;
+            expect(res.body.msg).to.eql('Successfully uploaded testfile.txt');
+            done();
+    });
+  });
+
+  it('should delete a user who owns files by name', function(done) {
+    chai.request('localhost:3003')
+        .delete('/users/test3')
+        .end(function(err, res) {
+          expect(err).to.eql(null);
+          expect(res.body.success).to.be.true;
+          expect(res.body.msg).to.eql('user test3 deleted');
+          done();
+    });
   });
 
   after(function(done) {

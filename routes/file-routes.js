@@ -25,7 +25,7 @@ module.exports = function(router) {
         if (err || !data) res.status(500).json({success: false, msg: 'No such user'});
         else {
           var file = new File(req.body);
-          var params = {Bucket: 'johncena/' + user, Key: file.name, Body: file.body};
+          var params = {Bucket: 'johncena', Key: data._id + '/' + file.name, Body: file.body};
           s3.upload(params, function(err, data) {
             if (err || !data) res.status(500).json({success: false, msg: 'Server error'});
             else res.json({success: true, msg: 'Successfully uploaded ' + file.name});
