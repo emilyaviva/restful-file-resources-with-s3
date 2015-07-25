@@ -96,6 +96,32 @@ describe('user-model.js', function() {
     });
   });
 
+  it('should get an array containing files that a user owns', function(done) {
+    chai.request('localhost:3003')
+        .get('/users/test3/files')
+        .end(function(err, res) {
+          expect(err).to.eql(null);
+          expect(res.body.success).to.be.true;
+          expect(res.body.files.length).to.be.above(0);
+          done();
+    });
+  });
+
+  it('should GET a URL for some specific file', function(done) {
+    chai.request('localhost:3003')
+        .get('/users/test3/files/testfile.txt')
+        .end(function(err, res) {
+          expect(err).to.eql(null);
+          expect(res.body.success).to.be.true;
+          var spl = res.body.url.split('?')[1].split('&');
+          expect(spl).to.have.length(3);
+          expect(spl[0].slice(0,15)).to.eql('AWSAccessKeyId=');
+          expect(spl[1].slice(0,8)).to.eql('Expires=');
+          expect(spl[2].slice(0,10)).to.eql('Signature=');
+          done();
+    });
+  });
+
   it('should delete a user who owns files by name', function(done) {
     chai.request('localhost:3003')
         .delete('/users/test3')

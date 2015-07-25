@@ -14,9 +14,10 @@ module.exports = function(router) {
 
   router.route('/users/:user/files')
     .get(function(req, res) {
-      var user = req.body.user;
+      var user = req.params.user;
       User.findOne({name:user}, function(err, data) {
-
+        if (err || !data) res.status(500).json({success: false, msg:'No such user'});
+        else res.json({success: true, files: data.files});
       });
     })
     .post(function(req, res) {
@@ -25,10 +26,16 @@ module.exports = function(router) {
         if (err || !data) res.status(500).json({success: false, msg: 'No such user'});
         else {
           var file = new File(req.body);
-          var params = {Bucket: 'johncena', Key: data._id + '/' + file.name, Body: file.body};
+          var userID = data._id;
+          var params = {Bucket: 'johncena', Key: userID + '/' + file.name, Body: file.body};
           s3.upload(params, function(err, data) {
             if (err || !data) res.status(500).json({success: false, msg: 'Server error'});
-            else res.json({success: true, msg: 'Successfully uploaded ' + file.name});
+            else {
+              User.findOneAndUpdate({_id: userID}, {$push: {files: file.name}}, function(err, data) {
+                if (err || !data) res.status(500).json({success:false, msg:err});
+              });
+              res.json({success: true, msg: 'Successfully uploaded ' + file.name});
+            }
           });
         }
       });
@@ -39,7 +46,21 @@ module.exports = function(router) {
 
   router.route('/users/:user/files/:file')
     .get(function(req, res) {
-
+      var user = req.params.user;
+      User.findOne({name:user}, function(err, data) {
+        if (err || !data) res.status(500).json({success: false, msg:'No such user'});
+        else {
+          if (data.files.indexOf(req.params.file) < 0) {
+            res.status(404).json({success: false, msg: 'File not found'});
+          } else {
+            var params = {Bucket: 'johncena', Key: data._id + '/' + req.params.file};
+            s3.getSignedUrl('getObject', params, function(err, url) {
+              if (err) res.status(500).json({success: false, msg: 'Server error'});
+              else res.json({success: true, url: url});
+            });
+          }
+        }
+      });
     })
     .put(function(req, res) {
 
