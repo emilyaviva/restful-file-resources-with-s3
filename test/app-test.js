@@ -122,6 +122,18 @@ describe('user-model.js', function() {
     });
   });
 
+  it('should PUT a replacement file and delete the original', function(done) {
+    chai.request('localhost:3003')
+        .put('/users/test3/files/testfile.txt')
+        .send({name: 'revised.txt', body: '67890'})
+        .end(function(err, res) {
+          expect(err).to.eql(null);
+          expect(res.body.success).to.be.true;
+          expect(res.body.msg).to.eql('Successfully uploaded revised.txt');
+          done();
+    });
+  });
+
   it('should delete a user who owns files by name', function(done) {
     chai.request('localhost:3003')
         .delete('/users/test3')

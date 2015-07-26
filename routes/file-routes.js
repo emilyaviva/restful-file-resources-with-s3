@@ -39,9 +39,6 @@ module.exports = function(router) {
           });
         }
       });
-    })
-    .delete(function(req, res) {
-
     });
 
   router.route('/users/:user/files/:file')
@@ -55,7 +52,7 @@ module.exports = function(router) {
           } else {
             var params = {Bucket: 'johncena', Key: data._id + '/' + req.params.file};
             s3.getSignedUrl('getObject', params, function(err, url) {
-              if (err) res.status(500).json({success: false, msg: 'Server error'});
+              if (err || !url) res.status(500).json({success: false, msg: 'Server error'});
               else res.json({success: true, url: url});
             });
           }
@@ -63,6 +60,36 @@ module.exports = function(router) {
       });
     })
     .put(function(req, res) {
-
+      var user = req.params.user;
+      User.findOne({name:user}, function(err, data) {
+        if (err || !data) res.status(500).json({success: false, msg: 'No such user'});
+        else {
+          if (data.files.indexOf(req.params.file) < 0) {
+            res.status(404).json({success: false, msg: 'File not found'});
+          } else {
+            var userID = data._id;
+            var file = new File(req.body);
+            var params = {Bucket: 'johncena', Key: userID + '/' + file.name, Body: file.body};
+            s3.upload(params, function(err, data) {
+              if (err || !data) res.status(500).json({success: false, msg: 'Server error'});
+              else {
+                params = {Bucket: 'johncena', Key: userID + '/' + req.params.file};
+                s3.deleteObject(params, function(err, data) {
+                  if (err || !data) res.status(500).json({success: false, msg: 'Server error'});
+                  else {
+                    User.findOneAndUpdate({_id: userID}, {$pop: {files: req.params.file.name}}, function(err, data) {
+                      if (err || !data) res.status(500).json({success: false, msg: err});
+                      else User.findOneAndUpdate({_id: userID}, {$push: {files: file.name}}, function(err, data) {
+                        if (err || !data) res.status(500).json({success: false, msg: err});
+                        else res.json({success: true, msg: 'Successfully uploaded ' + file.name});
+                      });
+                    });
+                  }
+                });
+              }
+            });
+          }
+        }
+      });
     });
 };
