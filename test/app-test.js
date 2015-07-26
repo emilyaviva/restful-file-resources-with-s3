@@ -15,10 +15,10 @@ chai.use(chaiHttp);
 
 require('../server');
 
-describe('user-model.js', function() {
+describe('app', function() {
   this.timeout(5000);
 
-  it('should create new resource for POST', function(done) {
+  it('should create new user for POST', function(done) {
     chai.request('localhost:3003')
         .post('/users')
         .send({name: 'test'})
@@ -26,6 +26,17 @@ describe('user-model.js', function() {
           expect(err).to.eql(null);
           expect(res.body.success).to.be.true;
           expect(res.body.msg).to.eql('Successfully created user test');
+          done();
+    });
+  });
+
+  it('should respond with no files to DELETE for a new user', function(done) {
+    chai.request('localhost:3003')
+        .delete('/users/test/files')
+        .end(function(err, res) {
+          expect(err).to.eql(null);
+          expect(res.body.success).to.be.true;
+          expect(res.body.msg).to.eql('No files to delete');
           done();
     });
   });

@@ -39,6 +39,29 @@ module.exports = function(router) {
           });
         }
       });
+    })
+    .delete(function(req, res) {
+      var user = req.params.user;
+      User.findOne({name: user}, function(err, data) {
+        if (err || !data) res.status(500).json({success: false, msg: 'No such user'});
+        else {
+          var userID = data._id;
+          if (!data.files.length) res.status(200).json({success: true, msg: 'No files to delete'});
+          else {
+            var params = {Bucket: 'johncena', Key: ''};
+            for (var i = 0; i < data.files.length; i++) {
+              params.Key = data._id + '/' + data.files[i];
+              s3.deleteObject(params, function(err, data) {
+                if (err || !data) res.status(500).json({success: false, msg: 'Server error'});
+              });
+            }
+            User.findOneAndUpdate({_id: userID}, {$set: {files: []}}, function(err, data) {
+              if (err || !data) res.status(500).json({success: false, msg:err});
+              else res.json({success: true, msg: 'Deleted all files from ' + user});
+            });
+          }
+        }
+      });
     });
 
   router.route('/users/:user/files/:file')
@@ -91,5 +114,5 @@ module.exports = function(router) {
           }
         }
       });
-    });
+  });
 };
