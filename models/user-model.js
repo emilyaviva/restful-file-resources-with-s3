@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 
 var userSchema = new Schema({
   name: {type: String, unique: true},
-  files: {type: Array}
+  files: Array
 });
 
 module.exports = mongoose.model('User', userSchema);

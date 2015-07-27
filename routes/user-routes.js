@@ -1,3 +1,5 @@
+'use strict';
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var router = express.Router;
@@ -22,7 +24,10 @@ module.exports = function(router) {
       var user = new User(req.body);
       user.save(function(err, data) {
         if (err || !data) res.status(500).json({success: false, msg: 'server error'});
-        else res.json({success: true, msg: 'Successfully created user ' + user.name});
+        else {
+          User.populate('files');
+          res.json({success: true, msg: 'Successfully created user ' + user.name});
+        }
       });
     });
 

@@ -1,3 +1,5 @@
+'use strict';
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
@@ -33,6 +35,7 @@ module.exports = function(router) {
             else {
               User.findOneAndUpdate({_id: userID}, {$push: {files: file.name}}, function(err, data) {
                 if (err || !data) res.status(500).json({success:false, msg:err});
+                File.populate('creator');
               });
               res.json({success: true, msg: 'Successfully uploaded ' + file.name});
             }
